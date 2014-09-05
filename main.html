@@ -62,8 +62,8 @@ function create() {
 
     //  We need to enable physics on the player
     game.physics.arcade.enable(player);
-    //  Player physics properties. Give the little guy a slight bounce.
-    player.body.bounce.y = 0.2;
+	//  Player physics properties. Give the little guy a slight bounce.
+    player.body.bounce.y = 0.5;
     player.body.gravity.y = gravity;
     player.body.collideWorldBounds = true;
 
@@ -96,10 +96,27 @@ function create() {
     //  Our controls.
     cursors = game.input.keyboard.createCursorKeys();
 
+	//Camera
 	game.camera.follow(player, Phaser.Camera.FOLLOW_PLATFORMER);
 	style = 'STYLE_PLATFORMER';
 
+	//  Stop the following keys from propagating up to the browser
+	game.input.keyboard.addKeyCapture([ Phaser.Keyboard.LEFT, Phaser.Keyboard.RIGHT, Phaser.Keyboard.UP, Phaser.Keyboard.DOWN, Phaser.Keyboard.SPACEBAR ]);
+
+	createKeyboardStandardBehaviour();
+
 }
+
+var inverseGravityKey;
+
+function createKeyboardStandardBehaviour() {
+	inverseGravityKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+	inverseGravityKey.onDown.add(function(){gravityDir = -gravityDir;}, this);
+	// TODO put other keys here?
+}
+
+
+
 
 //is gravity up or down?
 var gravityDir = 1;
@@ -120,7 +137,7 @@ function update() {
     game.physics.arcade.collide(stars, platforms);
 
 	// if gravity is not like it should be, then reverse it
-	if (gravity > 0 && player.body.gravity.y < 0 || gravity < 0 && player.body.gravity.y > 0) {
+	if (gravityDir > 0 && player.body.gravity.y < 0 || gravityDir < 0 && player.body.gravity.y > 0) {
 		player.body.gravity.y = -player.body.gravity.y;
 	}
 
@@ -135,38 +152,43 @@ function update() {
 	}
 
 	if(player.body.touching.right || player.body.touching.left) {
-
+	//TODO WORKING ON STUFF HERE
 	}
 
-    if (cursors.left.isDown)
-    {
-        //  Move to the left
-        player.body.velocity.x = -150;
+	playerInputHandling();
 
-        player.animations.play('left');
-    }
-    else if (cursors.right.isDown)
-    {
-        //  Move to the right
-        player.body.velocity.x = 150;
+}
 
-        player.animations.play('right');
-    }
-    else
-    {
-        //  Stand still
-        player.animations.stop();
-        player.frame = 4;
-    }
+function playerInputHandling () {
+ // TODO remember that the order in which these are run can have an impact!
+
+	if (cursors.left.isDown)
+	{
+		//  Move to the left
+		player.body.velocity.x = -150;
+
+		player.animations.play('left');
+	}
+	else if (cursors.right.isDown)
+	{
+		//  Move to the right
+		player.body.velocity.x = 150;
+
+		player.animations.play('right');
+	}
+	else
+	{
+		//  Stand still
+		player.animations.stop();
+		player.frame = 4;
+	}
 
 	// down key reverses gravity
-    if (cursors.down.isDown && airCrouch < maxAirCrouch) {
-		console.log("DOwn")
+	if (cursors.down.isDown && airCrouch < maxAirCrouch) {
 		airCrouch++;
 		player.body.velocity.y = gravityDir*duckStrength;
-		//gravityDir = -gravityDir;
 		cursors.down.reset();
-    }
+	}
 
 	if (cursors.up.isDown && airJumps < maxAirJumps)
 	{
@@ -174,7 +196,6 @@ function update() {
 		player.body.velocity.y = gravityDir*-jumpStrength;
 		cursors.up.reset(); // TODO does this have any sideeffects?
 	}
-
 
 }
 
