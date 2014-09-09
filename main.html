@@ -111,12 +111,18 @@ function create() {
 	// bug in pixi, https://github.com/G...ixi.js/pull/730, we have to reset the position
 	platforms.x = platforms.pivot.x;
 	platforms.y = platforms.pivot.y;
+
+
+
 }
+// Keys
+var inverseGravityKey, jumpKey, leftKey, rigthKey, downKey;
+//is gravity up or down?
+var gravityDir = 1;
 
-var inverseGravityKey;
-
+// TODO move to userInput file, for now im gonna try typeScript..
 function createKeyboardStandardBehaviour() {
-	inverseGravityKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+	inverseGravityKey = game.input.keyboard.addKey(Phaser.Keyboard.A);
 	inverseGravityKey.onDown.add(function(){/*platforms.rotation = 0.2;*/
 		//ground.anchor.setTo(0.1, 1); //so it flips around its middle
 		//ground.scale.setTo(-1,1);
@@ -125,20 +131,42 @@ function createKeyboardStandardBehaviour() {
 		//ground.scale.y = -1; //flipped
 //	platforms.angle += 180;
 		//game.add.tween(player).to({ x: '+20', y: '+20'});
-		game.add.tween(platforms.scale).to( {y: -1}, 300, Phaser.Easing.Back.InOut, true, 0, false).yoyo(false);
-		game.add.tween(player.scale).to( {y: -1}, 150, Phaser.Easing.Back.InOut, true, 0, false).yoyo(false);
+		gravityDir = -gravityDir;
+		game.add.tween(platforms.scale).to( {y: gravityDir}, 300, Phaser.Easing.Back.InOut, true, 0, false).yoyo(false);
+		game.add.tween(player.scale).to( {y: gravityDir}, 150, Phaser.Easing.Back.InOut, true, 0, false).yoyo(false);
 		//platforms.anchor.setTo(400, 300);  // Translate to the center
 		//game.scale.setTo(1, -1);       // Zoom in and flip y axis
 
-		gravityDir = -gravityDir;
 	}, this);
-	// TODO put other keys here?
-	console.log(platforms);
+
+	jumpKey = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+	jumpKey.onDown.add(function(){
+		if (airJumps < maxAirJumps) {
+			airJumps++;
+			player.body.velocity.y = gravityDir*-jumpStrength;
+		}
+	}, this);
+
+	rightKey = game.input.keyboard.addKey(Phaser.Keyboard.RIGHT);
+	rightKey.onDown.add(function(){
+		player.body.velocity.x = -290;
+		player.animations.play('left');
+	}, this);
+
+	leftKey = game.input.keyboard.addKey(Phaser.Keyboard.LEFT);
+	leftKey.onDown.add(function(){
+		player.body.velocity.x = 290;
+		player.animations.play('left');
+	}, this);
+
+	downKey = game.input.keyboard.addKey(Phaser.Keyboard.DOWN);
+	downKey.onDown.add(function(){
+		airCrouch++;
+		player.body.velocity.y = gravityDir*duckStrength;
+	}, this);
 }
 
 
-//is gravity up or down?
-var gravityDir = 1;
 var jumpStrength = 350;
 var duckStrength = 90;
 
@@ -182,54 +210,9 @@ function update() {
 		player.body.velocity.y = 0;
 	}
 
-	playerInputHandling();
-
-}
-
-function playerInputHandling () {
- // TODO remember that the order in which these are run can have an impact!
-
-	if (cursors.left.isDown)
-	{
-		//  Move to the left
-		player.body.velocity.x = -290;
-
-		player.animations.play('left');
-	}
-	else if (cursors.right.isDown)
-	{
-		//  Move to the right
-		player.body.velocity.x = 290;
-
-		player.animations.play('right');
-	}
-	else
-	{
-		//  Stand still
-		player.animations.stop();
-		player.frame = 4;
-	}
-
-	// down key reverses gravity
-	if (cursors.down.isDown && airCrouch < maxAirCrouch) {
-		airCrouch++;
-		player.body.velocity.y = gravityDir*duckStrength;
-		cursors.down.reset();
-	}
-
-	if (cursors.up.isDown && airJumps < maxAirJumps)
-	{
-		airJumps++;
-		player.body.velocity.y = gravityDir*-jumpStrength;
-		cursors.up.reset(); // TODO does this have any sideeffects?
-		if (cursors.right.shiftKey) {
-			this.player.rotation += 0.05;
-			ledge.rotation = -1*player.rotation;
-		} else {
-	//		player.x += 4 * Math.cos(player.rotation);
-	//		player.y += 4 * Math.sin(player.rotation);
-		}
-	}
+	//  Stand still
+	player.animations.stop();
+	player.frame = 4;
 
 }
 
